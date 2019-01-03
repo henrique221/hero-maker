@@ -3,8 +3,10 @@
     <head>
         <meta charset="UTF-8">
         <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/app.css') }}">
-        {% block stylesheets %}{% endblock %}
+        {% block stylesheets %}
+            <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/app.css') }}">
+        {% endblock %}
+        <link rel="icon" href="{{ asset('image/heromaker.jpg') }}">
     </head>
     <body>
         {% include "inc/navbar.html.twig" %}
