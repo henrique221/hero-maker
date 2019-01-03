@@ -3,6 +3,8 @@
 {% block title %}Hero Maker{% endblock %}
 
 {% block body %}
+
+    <div id="container"></div>
     <style>
 		body { margin: 0; }
 		canvas { width: 100%; height: 100% }
@@ -11,67 +13,68 @@
 
 {% block javascripts %}
 
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/88/three.min.js'></script>
-    <script src='https://threejs.org/examples/js/controls/TrackballControls.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/100/three.js'></script>
+	<script src="https://threejs.org/examples/js/loaders/ColladaLoader.js"></script>
+	<script src="https://threejs.org/examples/js/WebGL.js"></script>
+	<script src="https://threejs.org/examples/js/libs/stats.min.js"></script>
     <script>
-            function getScene() {
-            var scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x111111);
-            return scene;
-        }
+        	if ( WEBGL.isWebGLAvailable() === false ) {
+				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+			}
+			var container, stats, clock;
+			var camera, scene, renderer, elf;
+			init();
+			animate();
+			function init() {
+				container = document.getElementById( 'container' );
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 2000 );
+				camera.position.set( 8, 10, 8 );
+				camera.lookAt( 0, 3, 0 );
+				scene = new THREE.Scene();
+				clock = new THREE.Clock();
+				// loading manager
+				var loadingManager = new THREE.LoadingManager( function () {
+					scene.add( elf );
+				} );
+				// collada
+				var loader = new THREE.ColladaLoader( loadingManager );
+				loader.load( 'elf.dae', function ( collada ) {
+					elf = collada.scene;
+				} );
+				//
+				var ambientLight = new THREE.AmbientLight( 0xffffff, 1 );
+				scene.add( ambientLight );
+				var directionalLight = new THREE.DirectionalLight( 0xffffff, 2 );
+				directionalLight.position.set( 1, 1, 1 ).normalize();
+				scene.add( directionalLight );
+				//
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+				//
+				stats = new Stats();
+				container.appendChild( stats.dom );
+				//
+				window.addEventListener( 'resize', onWindowResize, false );
+			}
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+			function animate() {
+				requestAnimationFrame( animate );
+				render();
+				stats.update();
+			}
+			function render() {
+				var delta = clock.getDelta();
+				if ( elf !== undefined ) {
+					elf.rotation.z += delta * 0.5;
+				}
+				renderer.render( scene, camera );
+			}
 
-        function getCamera() {
-            var aspectRatio = window.innerWidth / window.innerHeight;
-            var camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
-            camera.position.set(0, 5, 5);
-            return camera;
-        }
-
-        function getLight(scene) {
-            var light = new THREE.PointLight(0xffffff, 1, 0);
-            light.position.set(1, 1, 1);
-            scene.add(light);
-
-            var ambientLight = new THREE.AmbientLight(0x111111);
-            scene.add(ambientLight);
-            return light;
-        }
-
-        function getRenderer() {
-            var renderer = new THREE.WebGLRenderer({antialias: true});
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-            return renderer;
-        }
-        function getControls(camera, renderer) {
-            var controls = new THREE.TrackballControls(camera, renderer.domElement);
-            controls.zoomSpeed = 0.0;
-            controls.panSpeed = 0.4;
-            return controls;
-        }
-        var loader = new THREE.JSONLoader();
-        loader.load( 'pillar.json', addModelToScene );
-
-        function addModelToScene( geometry, materials ) {
-            var material = new THREE.MeshFaceMaterial(materials);
-            model = new THREE.Mesh( geometry, material );
-            model.scale.set(0.5,0.5,0.5);
-            scene.add( model );
-        }
-
-        function render() {
-            requestAnimationFrame(render);
-            renderer.render(scene, camera);
-            controls.update();
-        };
-
-        var scene = getScene();
-        var camera = getCamera();
-        var light = getLight(scene);
-        var renderer = getRenderer();
-        var controls = getControls(camera, renderer);
-
-        render();
     </script>
 {% endblock %}
